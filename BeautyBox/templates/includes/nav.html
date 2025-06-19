@@ -1,0 +1,44 @@
+{% load cosmetic_tags %}
+<nav class="menu">
+    <a href="{% url 'home' %}" class="logo">BeautyBox</a>
+    <ul>
+        <li><a href="{% url 'home' %}">Главная</a></li>
+        <li><a href="{% url 'catalog' %}">Каталог</a></li>
+        <li><a href="{% url 'add_product_model' %}">Добавить товар</a></li>
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle">Категории</a>
+            <ul class="dropdown-menu">
+                {% get_categories as categories %}
+                {% if categories %}
+                    {% for cat in categories %}
+                        <li {% if cat.id == cat_selected %}class="selected"{% endif %}>
+                            <a href="{% url 'category' cat_slug=cat.slug %}">{{ cat.name }}</a>
+                        </li>
+                    {% endfor %}
+                {% else %}
+                    <li>Нет категорий</li>
+                {% endif %}
+            </ul>
+        </li>
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle">Теги</a>
+            <ul class="dropdown-menu">
+                {% show_tags %}
+            </ul>
+        </li>
+        {% if user.is_authenticated %}
+            <li class="last">
+                <a href="{% url 'users:profile' %}" class="button">Аккаунт</a> | 
+                <form action="{% url 'users:logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="button">Выйти</button>
+                </form>
+            </li>
+        {% else %}
+            <li class="last">
+                <a href="{% url 'users:login' %}" class="button">Войти</a> | 
+                <a href="{% url 'users:register' %}">Регистрация</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>

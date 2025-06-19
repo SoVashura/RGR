@@ -1,0 +1,16 @@
+{% extends 'cosmetics/base.html' %}
+
+{% block content %}
+<h1>Профиль пользователя</h1>
+<form method="post" enctype="multipart/form-data" class="profile-form">
+    {% csrf_token %}
+    {% for f in form %}
+        <p><label class="form-label" for="{{ f.id_for_label }}">{{ f.label }}:</label>{{ f }}</p>
+        <div class="form-error">{{ f.errors }}</div>
+    {% endfor %}
+    <div class="profile-actions">
+        <button type="submit" class="button">Сохранить</button>
+        <a href="{% url 'users:password_change' %}">Сменить пароль</a>
+    </div>
+</form>
+{% endblock %}

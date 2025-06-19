@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    {% load static %}
+    <link type="text/css" href="{% static 'cosmetics/css/styles.css' %}" rel="stylesheet" />
+</head>
+<body>
+    <div class="page-wrapper">
+        <header>
+            <div class="container">
+                {% include 'includes/nav.html' %}
+            </div>
+        </header>
+        <main class="container">
+            {% block content %}{% endblock %}
+            {% block cpagination %}
+                {% if page_obj.has_other_pages %}
+                    <nav class="list-pages">
+                        <ul>
+                            {% if page_obj.has_previous %}
+                                <li class="page-num">
+                                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.previous_page_number }}">&lt;</a>
+                                </li>
+                            {% endif %}
+                            {% for p in paginator.page_range %}
+                                {% if p >= page_obj.number|add:-2 and p <= page_obj.number|add:2 %}
+                                    {% if page_obj.number == p %}
+                                        <li class="page-num page-num-selected">{{ p }}</li>
+                                    {% else %}
+                                        <li class="page-num">
+                                            <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ p }}">{{ p }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if page_obj.has_next %}
+                                <li class="page-num">
+                                    <a href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if sort_by %}sort={{ sort_by }}&{% endif %}page={{ page_obj.next_page_number }}">&gt;</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% endblock %}
+        </main>
+    </div>
+    <footer>
+        <div class="container">
+            <p>© 2025 BeautyBox. Все права защищены.</p>
+            <nav class="menu">
+                <ul>
+                    <li><a href="{% url 'contacts' %} ">Контакты</a><li>
+                    <li><a href="{% url 'about' %}">О нас</a><li>
+                </ul>
+            </nav>
+        </div>
+    </footer>
+    {% block extra_js %} {% endblock %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+{% extends 'cosmetics/base.html' %}
+{% block content %}
+    <h1>{{ title }}</h1>
+    
+    <div class="mb-4">
+        <form method="get" class="form-inline">
+            <div class="input-group mr-2">
+                <input type="text" name="search" class="form-control" placeholder="Поиск товаров..." value="{{ search_query }}">
+                <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="submit">Поиск</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="sort" class="mr-2">Сортировать по:</label>
+                <select name="sort" id="sort" class="form-control" onchange="this.form.submit()">
+                    <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Новые сначала</option>
+                    <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Старые сначала</option>
+                    <option value="price" {% if sort_by == 'price' %}selected{% endif %}>Цена: от низкой к высокой</option>
+                    <option value="-price" {% if sort_by == '-price' %}selected{% endif %}>Цена: от высокой к низкой</option>
+                    <option value="name" {% if sort_by == 'name' %}selected{% endif %}>По названию (А-Я)</option>
+                    <option value="-name" {% if sort_by == '-name' %}selected{% endif %}>По названию (Я-А)</option>
+                </select>
+            </div>
+        </form>
+    </div>
+    
+    
+    <div class="product-grid">
+        {% for p in products %}
+            <div class="product-card">
+                <h3><a href="{% url 'product' product_slug=p.slug %}">{{ p.name }}</a></h3>
+                <p>{{ p.price }} руб.</p>
+                <p class="description">{{ p.description|truncatewords:10 }}</p>
+                <p>
+                    <span class="badge {% if p.is_available %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ p.get_status_display }}
+                    </span>
+                </p>
+            </div>
+        {% empty %}
+            <p class="alert alert-info">Товаров не найдено.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

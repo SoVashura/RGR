@@ -1,0 +1,116 @@
+{% extends 'cosmetics/base.html' %}
+{% block content %}
+    <div class="product-detail">
+        <h1>{{ product.name }}</h1>
+        {% if product.photo %}
+            <img src="{{ product.photo.url }}" alt="{{ product.name }}" class="img-fluid mb-3" style="max-width: 300px;">
+        {% endif %}
+        <p><strong>Цена:</strong> {{ product.price }} руб.</p>
+        <p><strong>Категория:</strong> <a href="{% url 'category' cat_slug=product.category.slug %}">{{ product.category.name }}</a></p>
+        <p><strong>Статус:</strong> 
+            <span class="badge {% if product.is_available %}badge-success{% else %}badge-secondary{% endif %}">
+                {{ product.get_status_display }}
+            </span>
+        </p>
+        <p><strong>Добавлен:</strong> {{ product.created_at|date:"d.m.Y H:i" }}</p>
+        {% if product.manufacturer %}
+            <p><strong>Производитель:</strong> {{ product.manufacturer.name }} ({{ product.manufacturer.country }})</p>
+        {% endif %}
+        {% if product.tags.all %}
+            <p><strong>Теги:</strong>
+                <ul class="tags-list">
+                    {% for tag in product.tags.all %}
+                        <li><a href="{% url 'tag' tag_slug=tag.slug %}">{{ tag.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </p>
+        {% endif %}
+        {% autoescape off %}
+            <p class="description">{{ product.description|linebreaks }}</p>
+        {% endautoescape %}
+        
+        <div class="mt-4">
+            {% if product.is_available %}
+                <button class="btn btn-primary">Добавить в корзину</button>
+            {% endif %}
+            {% if user == product.created_by or user.is_superuser %}
+                <a href="{% url 'edit_product' product_slug=product.slug %}" class="btn btn-primary">Редактировать</a>
+                <a href="{% url 'delete_product' product_slug=product.slug %}" class="btn btn-danger">Удалить</a>
+            {% endif %}
+            {% if user.is_authenticated and perms.users.can_publish_profile %}
+                <a href="#">Опубликовать профиль</a>
+            {% endif %}
+            <a href="{% url 'catalog' %}" class="btn btn-outline-secondary">Назад к каталогу</a>
+        </div>
+
+        <!-- Кнопки лайков/дизлайков -->
+        <div class="reaction-buttons mt-3">
+            <button class="btn btn-outline-success btn-sm react-btn" data-reaction="LIKE" data-slug="{{ product.slug }}">
+                Лайк (<span class="like-count">{{ like_count }}</span>)
+            </button>
+            <button class="btn btn-outline-danger btn-sm react-btn" data-reaction="DISLIKE" data-slug="{{ product.slug }}">
+                Дизлайк (<span class="dislike-count">{{ dislike_count }}</span>)
+            </button>
+        </div>
+
+        <!-- Секция комментариев -->
+        <div class="mt-4">
+            <h3>Комментарии</h3>
+            {% for comment in comments %}
+                <div class="comment mb-3" style="border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                    <p><strong>{{ comment.user.username }}</strong> <small>{{ comment.created_at|date:"d.m.Y H:i" }}</small></p>
+                    <p>{{ comment.content|linebreaks }}</p>
+                </div>
+            {% empty %}
+                <p class="alert alert-info">Комментариев пока нет.</p>
+            {% endfor %}
+
+            {% if user.is_authenticated %}
+                <h4>Оставить комментарий</h4>
+                <form method="post" class="mb-4">
+                    {% csrf_token %}
+                    {{ comment_form.as_p }}
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            {% else %}
+                <p><a href="{% url 'users:login' %}">Войдите</a>, чтобы оставить комментарий.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.react-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const slug = this.getAttribute('data-slug');
+        const reaction = this.getAttribute('data-reaction');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        console.log(`Sending reaction: ${reaction} for slug: ${slug}`); // Отладка
+
+        fetch(`/product/${slug}/react/${reaction}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => {
+            console.log('Response status:', response.status); // Отладка
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data); // Отладка
+            if (data.success) {
+                document.querySelector(`[data-slug="${slug}"][data-reaction="LIKE"] .like-count`).textContent = data.likes;
+                document.querySelector(`[data-slug="${slug}"][data-reaction="DISLIKE"] .dislike-count`).textContent = data.dislikes;
+            } else {
+                alert(data.error || 'Ошибка при отправке реакции');
+            }
+        })
+        .catch(error => console.error('Fetch error:', error));
+    });
+});
+</script>
+{% endblock %}

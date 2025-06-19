@@ -1,0 +1,21 @@
+{% extends 'cosmetics/base.html' %}
+{% block content %}
+    <h1>{{ title }}</h1>
+    <p class="intro">Добро пожаловать в BeautyBox — мир красоты и ухода!</p>
+    <h2>Популярные товары</h2>
+    <div class="product-grid">
+        {% for p in products %}
+            <div class="product-card">
+                <h3><a href="{% url 'product' product_slug=p.slug %}">{{ p.name }}</a></h3>
+                <p>{{ p.price }} руб.</p>
+                <p>
+                    <span class="badge {% if p.is_available %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ p.get_status_display }}
+                    </span>
+                </p>
+            </div>
+        {% empty %}
+            <p class="alert alert-info">Нет доступных товаров</p>
+        {% endfor %}
+    </div>
+{% endblock %}
